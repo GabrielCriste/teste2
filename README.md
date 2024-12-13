@@ -1,95 +1,41 @@
-# Jupyter Remote Desktop Proxy
+# Almond Examples [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/almond-sh/examples/master?urlpath=lab%2Ftree%2Fnotebooks%2Findex.ipynb) [![nbviewer](https://img.shields.io/badge/view%20on-nbviewer-brightgreen.svg)](https://nbviewer.jupyter.org/github/almond-sh/almond-examples/tree/master/notebooks/index.ipynb) [![Deepnote](https://deepnote.com/buttons/launch-in-deepnote-small.svg)](https://deepnote.com/project/9970220b-94df-4e6e-9695-85dda6b14c59#%2Fexamples%2Fnotebooks%2Findex.ipynb)
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/jupyterhub/jupyter-remote-desktop-proxy/HEAD?urlpath=desktop)
-[![Test](https://github.com/jupyterhub/jupyter-remote-desktop-proxy/actions/workflows/test.yaml/badge.svg)](https://github.com/jupyterhub/jupyter-remote-desktop-proxy/actions/workflows/test.yaml)
-[![Latest PyPI version](https://img.shields.io/pypi/v/jupyter-remote-desktop-proxy?logo=pypi)](https://pypi.python.org/pypi/jupyter-remote-desktop-proxy)
-[![Issue tracking - GitHub](https://img.shields.io/badge/issue_tracking-github-blue?logo=github)](https://github.com/jupyterhub/jupyter-remote-desktop-proxy/issues)
-[![Help forum - Discourse](https://img.shields.io/badge/help_forum-discourse-blue?logo=discourse)](https://discourse.jupyter.org/c/jupyterhub)
 
-Run XFCE (or other desktop environments) on Jupyter.
+A collection of [Jupyter](http://jupyter.org/) notebooks showing what you can do with the [Almond](https://almond.sh) Scala kernel.
 
-This is based on https://github.com/ryanlovett/nbnovnc.
+## Run interactively on Binder
+The easiest way to get started is to [run the examples on Binder](https://mybinder.org/v2/gh/almond-sh/examples/master?urlpath=lab%2Ftree%2Fnotebooks%2Findex.ipynb).
+All your need is a browser!
 
-When this extension is launched it will run a Linux desktop on the Jupyter single-user server, and proxy it to your browser using VNC via Jupyter.
+Binder is an amazing service that allows you to create an executable environment out of a Git repository containing
+Jupyter notebooks. That way, you can play with the examples and try new things without having to install anything locally.
 
-![Screenshot of jupyter-remote-desktop-proxy XFCE desktop](https://raw.githubusercontent.com/jupyterhub/jupyter-remote-desktop-proxy/main/tests/reference/desktop.png)
+## See Notebook Output in nbviewer
+You can view the notebooks directly on GitHub, as it has a basic renderer for Jupyter notebooks. It doesn't execute any JavaScript though, which severly limits its ability to show dynamically generated plots i.e. from plotly and vegas.
 
-## VNC Server
+A much better option is to render them through [nbviewer](https://nbviewer.jupyter.org/). nbviewer supports loading notebooks directly from a repo on GitHub.
 
-This extension requires a [VNC Server](https://en.wikipedia.org/wiki/Virtual_Network_Computing)
-to be installed on the system (likely, in the container image). The
-most tested VNC server is [TigerVNC](https://tigervnc.org/), while
-[TurboVNC](https://www.turbovnc.org/) also works. Any VNC server available
-in `$PATH` as `vncserver` will be used, but no real testing outside of
-these servers has been performed.
+**[List of all notebooks in this project in nbviewer](https://nbviewer.jupyter.org/github/almond-sh/almond-examples/tree/master/notebooks/index.ipynb)**
 
-For an example, see the [`Dockerfile`](./Dockerfile) in this repository which installs TigerVNC and XFCE4.
+## Run interactively in Deepnote
+You can also try Almond very quickly by cloning [this Deepnote project with Almond kernel and examples](https://deepnote.com/project/9970220b-94df-4e6e-9695-85dda6b14c59#%2Fexamples%2Fnotebooks%2Findex.ipynb). Deepnote offers hosted notebooks with real-time collaboration capabilities for free.
 
-## Installation
+## Running locally
+An even better way to learn about Jupyter and Almond is to run it locally so you can try things out for yourself.
 
-1. Install this package itself, with `pip` from `PyPI`:
-
-   ```bash
-   pip install jupyter-remote-desktop-proxy
-   ```
-
-2. Install the packages needed to provide a VNC server and the actual Linux Desktop environment.
-   You need to pick a desktop environment (there are many!) - here are the packages
-   to use TigerVNC and the light-weight [XFCE4](https://www.xfce.org/) desktop environment on Ubuntu 22.04:
-
-   ```
-   dbus-x11
-   xfce4
-   xfce4-panel
-   xfce4-session
-   xfce4-settings
-   xorg
-   xubuntu-icon-theme
-   tigervnc-standalone-server
-   tigervnc-xorg-extension
-   ```
-
-   The recommended way to install these is from your Linux system package manager
-   of choice (such as apt).
-
-## Docker
-
-To spin up such a notebook first build the container:
+### Via docker
+We provide a docker image for the current almond version, based on the [latest almond docker image](https://almond.sh/docs/try-docker). Run it with
 
 ```bash
-$ docker build -t $(whoami)/$(basename ${PWD}) .
+docker run -it --rm -p 8888:8888 almondsh/examples:latest
 ```
 
-Now you can run the image:
+Then copy the URL shown in the Docker output into your browser.
+To use JupyterLab instead of the classic Notebook interface, replace *tree* with *lab* after opening the URL.
 
-```bash
-$ docker run --rm --security-opt seccomp=unconfined -p 8888:8888 $(whoami)/$(basename ${PWD})
-Executing the command: jupyter notebook
-[I 12:43:59.148 NotebookApp] Writing notebook server cookie secret to /home/jovyan/.local/share/jupyter/runtime/notebook_cookie_secret
-[I 12:44:00.221 NotebookApp] JupyterLab extension loaded from /opt/conda/lib/python3.7/site-packages/jupyterlab
-[I 12:44:00.221 NotebookApp] JupyterLab application directory is /opt/conda/share/jupyter/lab
-[I 12:44:00.224 NotebookApp] Serving notebooks from local directory: /home/jovyan
-[I 12:44:00.225 NotebookApp] The Jupyter Notebook is running at:
-[I 12:44:00.225 NotebookApp] http://924904e0a646:8888/?token=40475e553b7671b9e93533b97afe584fa2030448505a7d83
-[I 12:44:00.225 NotebookApp]  or http://127.0.0.1:8888/?token=40475e553b7671b9e93533b97afe584fa2030448505a7d83
-[I 12:44:00.225 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
-[C 12:44:00.229 NotebookApp]
-
-    To access the notebook, open this file in a browser:
-        file:///home/jovyan/.local/share/jupyter/runtime/nbserver-8-open.html
-    Or copy and paste one of these URLs:
-        http://924904e0a646:8888/?token=40475e553b7671b9e93533b97afe584fa2030448505a7d83
-     or http://127.0.0.1:8888/?token=40475e553b7671b9e93533b97afe584fa2030448505a7d83
-*snip*
-```
-
-Now head to the URL shown and you will be greated with a XFCE desktop.
-
-Note the `--security-opt seccomp=unconfined` parameter - this is necessary
-to start daemons (such as dbus, pulseaudio, etc) necessary for linux desktop
-to work. This is the option kubernetes runs with by default, so most kubernetes
-based JupyterHubs will not need any modifications for this to work.
-
-## Limitations
-
-1. Desktop applications that require access to OpenGL are currently unsupported.
+### Locally on your machine
+To run these notebooks locally:
+1. Install [Jupyter Notebook](http://jupyter.org/install) or [JupyterLab](https://jupyterlab.readthedocs.io/en/stable/)
+2. Install an [Almond kernel](https://almond.sh/docs/quick-start-install)
+3. Clone the project and run `jupyter notebook` or `jupyter lab` in the project directory
+4. Open one of the example notebooks and play with it!
