@@ -1,13 +1,14 @@
-# Use a imagem base
+# Use a imagem base do Almond
 FROM almondsh/almond:latest
 
 # Trocar para o usuário root para instalar dependências do sistema
 USER root
 
-# Atualizar sistema e instalar dependências
+# Atualizar e instalar dependências necessárias
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    curl \
+    nodejs \
+    npm \
     graphviz \
     dbus-x11 \
     xclip \
@@ -18,42 +19,34 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     xorg \
     xubuntu-icon-theme \
     fonts-dejavu && \
-    apt-get -y remove xfce4-screensaver && \
+    apt-get -y -qq remove xfce4-screensaver && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Instalar Node.js (versão estável compatível com JupyterLab)
+# Atualizar o Node.js para uma versão compatível com JupyterLab
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
     apt-get install -y nodejs && \
-    npm install -g npm@latest && \
-    node -v && npm -v
+    npm install -g npm@latest
 
-# Configurar permissões e criar diretórios necessários
-RUN mkdir -p /opt/install && \
-    chown -R $NB_UID:$NB_GID /home/jovyan /opt/install
-
-# Trocar para o usuário padrão
-USER $NB_UID
-
-# Atualizar pip, instalar e configurar extensões do JupyterLab
+# Atualizar pip e instalar JupyterLab
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir --upgrade jupyterlab && \
-    jupyter labextension install @jupyterlab/plotly-extension
-
-# Limpar e reconstruir JupyterLab
-RUN jupyter lab clean && \
+    pip install --no-cache-dir jupyterlab && \
+    jupyter lab clean && \
     jupyter lab build --dev-build=False --minimize=False || \
     cat /tmp/jupyterlab-debug-*.log
 
-# Copiar arquivos e scripts adicionais para o container
+# Copiar scripts adicionais para o diretório de trabalho
 COPY --chown=$NB_UID:$NB_GID binder/ /home/jovyan/binder/
 
-# Garantir permissões de execução para o script postBuild
+# Garantir permissões para o script postBuild
 RUN chmod +x /home/jovyan/binder/postBuild
 
 # Executar o script postBuild com tratamento de erros
 RUN ./home/jovyan/binder/postBuild || (cat /tmp/jupyterlab-debug-*.log && exit 1)
 
-# Definir comando padrão
-USER $NB_USER
+# Retornar ao usuário padrão do container
+USER $NB_UID
+
+# Definir o comando padrão
 CMD ["start.sh"]
+
