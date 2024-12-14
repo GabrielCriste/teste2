@@ -1,52 +1,39 @@
-# Use a imagem base do Almond
-FROM almondsh/almond:latest
+# Use uma imagem base apropriada
+FROM jupyter/base-notebook:latest
 
-# Trocar para o usuário root para instalar dependências do sistema
-USER root
-
-# Atualizar e instalar dependências necessárias
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Atualizar pacotes e instalar dependências necessárias
+RUN apt-get update && apt-get install -y \
+    curl \
     build-essential \
     nodejs \
-    npm \
-    graphviz \
-    dbus-x11 \
-    xclip \
-    xfce4 \
-    xfce4-panel \
-    xfce4-session \
-    xfce4-settings \
-    xorg \
-    xubuntu-icon-theme \
-    fonts-dejavu && \
-    apt-get -y -qq remove xfce4-screensaver && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    npm && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Atualizar o Node.js para uma versão compatível com JupyterLab
+# Certifique-se de usar uma versão compatível do Node.js
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
     apt-get install -y nodejs && \
     npm install -g npm@latest
 
-# Atualizar pip e instalar JupyterLab
+# Instalar o JupyterLab e suas dependências
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir jupyterlab && \
-    jupyter lab clean && \
-    jupyter lab build --dev-build=False --minimize=False || \
-    cat /tmp/jupyterlab-debug-*.log
+    pip install jupyterlab
 
-# Copiar scripts adicionais para o diretório de trabalho
-COPY --chown=$NB_UID:$NB_GID binder/ /home/jovyan/binder/
+# Garantir limpeza antes do build
+RUN jupyter lab clean
 
-# Garantir permissões para o script postBuild
-RUN chmod +x /home/jovyan/binder/postBuild
+# Adicionar o script postBuild com permissões corretas
+COPY binder/postBuild ./binder/postBuild
+RUN chmod +x binder/postBuild
 
-# Executar o script postBuild com tratamento de erros
-RUN ./home/jovyan/binder/postBuild || (cat /tmp/jupyterlab-debug-*.log && exit 1)
+# Rodar o script e capturar erros, se houver
+RUN ./binder/postBuild || (cat /tmp/jupyterlab-debug-*.log && exit 1)
 
-# Retornar ao usuário padrão do container
-USER $NB_UID
+# Build simplificado do JupyterLab
+RUN jupyter lab build --dev-build=False --minimize=False || \
+    (cat /tmp/jupyterlab-debug-*.log && exit 1)
 
-# Definir o comando padrão
-CMD ["start.sh"]
+# Configurar o usuário padrão
+ARG NB_USER=jovyan
+USER ${NB_USER}
+
 
