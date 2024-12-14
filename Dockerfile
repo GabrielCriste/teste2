@@ -1,4 +1,4 @@
-# Use uma imagem base apropriada
+# Use a imagem base apropriada
 FROM jupyter/base-notebook:latest
 
 # Atualizar pacotes e instalar dependências necessárias
@@ -23,7 +23,7 @@ RUN jupyter lab clean
 
 # Adicionar o script postBuild com permissões corretas
 COPY binder/postBuild ./binder/postBuild
-RUN chmod +x binder/postBuild
+RUN chmod +x ./binder/postBuild
 
 # Rodar o script e capturar erros, se houver
 RUN ./binder/postBuild || (cat /tmp/jupyterlab-debug-*.log && exit 1)
