@@ -1,40 +1,44 @@
-# Use uma imagem base apropriada
-FROM jupyter/base-notebook:latest
+FROM quay.io/jupyter/base-notebook:2024-12-02
 
-# Atualizar pacotes e instalar dependências necessárias
-RUN apt-get update && apt-get install -y \
-    curl \
-    build-essential \
-    nodejs \
-    npm \
-    python3-dev \
-    libc6-dev \
-    gcc && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+USER root
 
-# Certifique-se de usar uma versão compatível do Node.js
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
-    apt-get install -y nodejs && \
-    npm install -g npm@latest
+# Instalar dependências adicionais necessárias
+RUN apt-get -y -qq update \
+    && apt-get -y -qq install \
+        dbus-x11 \
+        xclip \
+        xfce4 \
+        xfce4-panel \
+        xfce4-session \
+        xfce4-settings \
+        xorg \
+        xubuntu-icon-theme \
+        fonts-dejavu \
+    && apt-get -y -qq remove xfce4-screensaver \
+    && mkdir -p /opt/install \
+    && chown -R $NB_UID:$NB_GID $HOME /opt/install \
+    && rm -rf /var/lib/apt/lists/*
 
-# Instalar o JupyterLab e suas dependências
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir --upgrade jupyterlab
+# Instalar o VNC server (opcional)
+ARG vncserver=tigervnc
+RUN if [ "${vncserver}" = "tigervnc" ]; then \
+        apt-get -y -qq update; \
+        apt-get -y -qq install tigervnc-standalone-server; \
+        rm -rf /var/lib/apt/lists/*; \
+    fi
 
-# Garantir limpeza antes do build
-RUN jupyter lab clean
+# Clonar o repositório desejado
+RUN git clone https://github.com/almond-sh/examples.git /opt/repository
 
-# Adicionar o script postBuild com permissões corretas
-COPY binder/postBuild ./binder/postBuild
-RUN chmod +x /home/jovyan/binder/postBuild
+# Instalar dependências do repositório (ajuste conforme necessário)
+WORKDIR /opt/repository
+RUN . /opt/conda/bin/activate && \
+    mamba env update --quiet --file environment.yml || true
 
-# Rodar o script postBuild e capturar erros, se houver
-RUN ./binder/postBuild || (cat /tmp/jupyterlab-debug-*.log && exit 1)
+# Instalar pacotes adicionais no ambiente
+COPY --chown=$NB_UID:$NB_GID . /opt/install
+RUN . /opt/conda/bin/activate && \
+    mamba install -y -q "nodejs>=22" && \
+    pip install /opt/install
 
-# Construir o JupyterLab com detalhes de erro
-RUN jupyter lab build --debug --dev-build=False --minimize=False || \
-    (cat /tmp/jupyterlab-debug-*.log && exit 1)
-
-# Configurar o usuário padrão
-ARG NB_USER=jovyan
-USER ${NB_USER}
+USER $NB_USER
